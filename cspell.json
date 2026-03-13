@@ -1,0 +1,20 @@
+{
+    "version": "0.2",
+    "ignorePaths": [],
+    "dictionaryDefinitions": [],
+    "dictionaries": [],
+    "words": [
+        "readbits",
+        "readf",
+        "readi",
+        "readstring",
+        "readu",
+        "writebits",
+        "writef",
+        "writei",
+        "writestring",
+        "writeu"
+    ],
+    "ignoreWords": [],
+    "import": []
+}
