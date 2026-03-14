@@ -4,11 +4,13 @@
     "dictionaryDefinitions": [],
     "dictionaries": [],
     "words": [
+        "bnot",
         "readbits",
         "readf",
         "readi",
         "readstring",
         "readu",
+        "setmetatable",
         "writebits",
         "writef",
         "writei",

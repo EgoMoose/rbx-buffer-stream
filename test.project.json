@@ -19,7 +19,7 @@
 			},
 			"Packages": {
 				"$path": "Packages",
-				"Bufferize": {
+				"BufferStream": {
 					"$path": "default.project.json"
 				}
 			}
