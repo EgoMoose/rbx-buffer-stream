@@ -219,7 +219,7 @@ end
 function BufferStreamClass.writef16(self: BufferStream, value: number)
 	local packed = 0
 	if value ~= 0 then
-		local sign = math.sign(value)
+		local sign = value < 0 and 1 or 0
 		local mantissa, exponent = math.frexp(math.abs(value))
 		local frac = math.round((mantissa * 2 - 1) * 1024)
 
