@@ -59,7 +59,7 @@ end
 
 function BufferStreamClass.readbytes(self: BufferStream, bytes: number)
 	local bits = bytes * 8
-	local result = buffer.readbits(self.buffer, self.cursor, bits)
+	local result = buffer.readbits(self.buffer, self.cursor * 8, bits)
 	self.cursor = self.cursor + bytes
 	return result
 end
