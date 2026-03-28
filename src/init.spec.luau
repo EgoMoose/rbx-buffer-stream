@@ -230,3 +230,69 @@ describe("readi64 / writei64", function()
 		expect(i64).toEqual(-0xFFFFFFFF)
 	end)
 end)
+
+describe("readf8 / writef8", function()
+	local b = buffer.create(1)
+	local stream = BufferStream.static(b)
+
+	it("should read & write f8s", function()
+		stream:writef8(1)
+		stream.cursor = 0
+		local f8 = stream:readf8()
+		expect(f8).toEqual(1)
+	end)
+end)
+
+describe("readf16 / writef16", function()
+	local b = buffer.create(2)
+	local stream = BufferStream.static(b)
+
+	it("should read & write f16s", function()
+		stream:writef16(1)
+		stream.cursor = 0
+		local f16 = stream:readf16()
+		expect(f16).toEqual(1)
+	end)
+end)
+
+describe("readf32", function()
+	local b = buffer.create(4)
+	buffer.writef32(b, 0, 1)
+	local stream = BufferStream.static(b)
+
+	it("should read f32s", function()
+		local f32 = stream:readf32()
+		expect(f32).toEqual(1)
+	end)
+end)
+
+describe("writef32", function()
+	local stream = BufferStream.static(buffer.create(4))
+
+	it("should write f32s", function()
+		stream:writef32(1)
+		local f32 = buffer.readf32(stream.buffer, 0)
+		expect(f32).toEqual(1)
+	end)
+end)
+
+describe("readf64", function()
+	local b = buffer.create(8)
+	buffer.writef64(b, 0, 1)
+	local stream = BufferStream.static(b)
+
+	it("should read f64s", function()
+		local f64 = stream:readf64()
+		expect(f64).toEqual(1)
+	end)
+end)
+
+describe("writef64", function()
+	local stream = BufferStream.static(buffer.create(8))
+
+	it("should write f64s", function()
+		stream:writef64(1)
+		local f64 = buffer.readf64(stream.buffer, 0)
+		expect(f64).toEqual(1)
+	end)
+end)
