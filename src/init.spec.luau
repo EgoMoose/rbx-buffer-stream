@@ -155,3 +155,78 @@ describe("readu64 / writeu64", function()
 		expect(u64).toEqual(0xFFFFFFFF + 1)
 	end)
 end)
+
+describe("readi8", function()
+	local b = buffer.create(1)
+	buffer.writei8(b, 0, -122)
+	local stream = BufferStream.static(b)
+
+	it("should read i8s", function()
+		local i8 = stream:readi8()
+		expect(i8).toEqual(-122)
+	end)
+end)
+
+describe("writei8", function()
+	local stream = BufferStream.static(buffer.create(1))
+
+	it("should write i8s", function()
+		stream:writei8(-122)
+		local i8 = buffer.readi8(stream.buffer, 0)
+		expect(i8).toEqual(-122)
+	end)
+end)
+
+describe("readi16", function()
+	local b = buffer.create(2)
+	buffer.writei16(b, 0, -10267)
+	local stream = BufferStream.static(b)
+
+	it("should read i16s", function()
+		local i16 = stream:readi16()
+		expect(i16).toEqual(-10267)
+	end)
+end)
+
+describe("writei16", function()
+	local stream = BufferStream.static(buffer.create(2))
+
+	it("should write i16s", function()
+		stream:writei16(-10267)
+		local i16 = buffer.readi16(stream.buffer, 0)
+		expect(i16).toEqual(-10267)
+	end)
+end)
+
+describe("readi32", function()
+	local b = buffer.create(4)
+	buffer.writei32(b, 0, -1_000_023)
+	local stream = BufferStream.static(b)
+
+	it("should read i32s", function()
+		local i32 = stream:readi32()
+		expect(i32).toEqual(-1_000_023)
+	end)
+end)
+
+describe("writei32", function()
+	local stream = BufferStream.static(buffer.create(4))
+
+	it("should write i32s", function()
+		stream:writei32(-1_000_023)
+		local i32 = buffer.readi32(stream.buffer, 0)
+		expect(i32).toEqual(-1_000_023)
+	end)
+end)
+
+describe("readi64 / writei64", function()
+	local b = buffer.create(8)
+	local stream = BufferStream.static(b)
+
+	it("should read & write i64s", function()
+		stream:writei64(-0xFFFFFFFF)
+		stream.cursor = 0
+		local i64 = stream:readi64()
+		expect(i64).toEqual(-0xFFFFFFFF)
+	end)
+end)
