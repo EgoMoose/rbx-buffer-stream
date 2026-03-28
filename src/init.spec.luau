@@ -236,10 +236,10 @@ describe("readf8 / writef8", function()
 	local stream = BufferStream.static(b)
 
 	it("should read & write f8s", function()
-		stream:writef8(1)
+		stream:writef8(-1)
 		stream.cursor = 0
 		local f8 = stream:readf8()
-		expect(f8).toEqual(1)
+		expect(f8).toEqual(-1)
 	end)
 end)
 
