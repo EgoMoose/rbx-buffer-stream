@@ -2,7 +2,7 @@
 name = "egomoose/buffer-stream"
 description = "An abstraction for buffers that allows reading and writing data in sequence."
 repository = "https://github.com/EgoMoose/rbx-buffer-stream"
-version = "0.2.0"
+version = "1.0.0"
 registry = "https://github.com/UpliftGames/wally-index"
 realm = "shared"
 license = "MIT"
