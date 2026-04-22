@@ -3,5 +3,7 @@
 /Packages
 /placefiles
 
+/.vscode/settings.json
+
 sourcemap.json
 *.ds_store
