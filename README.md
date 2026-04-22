@@ -1,4 +1,16 @@
+<!-- Links -->
+
+[bufferstream/releases]: https://github.com/EgoMoose/rbx-buffer-stream/releases
+[bufferstream/wally]: https://wally.run/package/egomoose/buffer-stream
+
+<!-- Badges -->
+
+[badges/github]: https://raw.githubusercontent.com/gist/cxmeel/0dbc95191f239b631c3874f4ccf114e2/raw/github.svg
+[badges/wally]: https://raw.githubusercontent.com/gist/cxmeel/0dbc95191f239b631c3874f4ccf114e2/raw/wally.svg
+
 # BufferStream
+
+[![Get it on Github][badges/github]][bufferstream/releases] [![Get it on Wally][badges/wally]][bufferstream/wally]
 
 BufferStream is an abstraction for buffers that allows reading and writing data in sequence.
 
