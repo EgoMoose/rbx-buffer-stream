@@ -82,7 +82,7 @@ function BufferStreamClass.expand(self: BufferStream, bytes: number)
 	expand(self, bytes)
 end
 
-function BufferStreamClass.readbytes(self: BufferStream, bytes: number)
+function BufferStreamClass.readUnsignedBytes(self: BufferStream, bytes: number)
 	local bits = bytes * 8
 	local result = buffer.readbits(self.buffer, self.cursor * 8, bits)
 	self.cursor = self.cursor + bytes
@@ -93,7 +93,7 @@ local function writebits(b: buffer, offset: number, bytes: number, value: number
 	return buffer.writebits(b, offset * 8, bytes * 8, value)
 end
 
-function BufferStreamClass.writebytes(self: BufferStream, bytes: number, value: number)
+function BufferStreamClass.writeUnsignedBytes(self: BufferStream, bytes: number, value: number)
 	return dynamicWrite(self, bytes, writebits, bytes, value)
 end
 

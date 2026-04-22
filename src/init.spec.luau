@@ -16,66 +16,66 @@ describe("copy", function()
 	end)
 end)
 
-describe("readbytes", function()
+describe("readUnsignedBytes", function()
 	local b = buffer.create(4)
 	local stream = BufferStream.static(b)
 
 	it("should read 1 byte", function()
 		stream.cursor = 0
 		buffer.writeu8(b, 0, 78)
-		local u8 = stream:readbytes(1)
+		local u8 = stream:readUnsignedBytes(1)
 		expect(u8).toEqual(78)
 	end)
 
 	it("should read 2 bytes", function()
 		stream.cursor = 0
 		buffer.writeu16(b, 0, 1234)
-		local u16 = stream:readbytes(2)
+		local u16 = stream:readUnsignedBytes(2)
 		expect(u16).toEqual(1234)
 	end)
 
 	it("should read 4 bytes", function()
 		stream.cursor = 0
 		buffer.writeu32(b, 0, 1_000_000)
-		local u32 = stream:readbytes(4)
+		local u32 = stream:readUnsignedBytes(4)
 		expect(u32).toEqual(1_000_000)
 	end)
 
 	it("should not read signed integers", function()
 		stream.cursor = 0
 		buffer.writeu8(b, 0, -78)
-		local u8 = stream:readbytes(1)
+		local u8 = stream:readUnsignedBytes(1)
 		expect(u8 == -78).toEqual(false)
 	end)
 end)
 
-describe("writebytes", function()
+describe("writeUnsignedBytes", function()
 	local stream = BufferStream.static(buffer.create(4))
 
 	it("should write 1 byte", function()
 		stream.cursor = 0
-		stream:writebytes(1, 78)
+		stream:writeUnsignedBytes(1, 78)
 		local u8 = buffer.readu8(stream.buffer, 0)
 		expect(u8).toEqual(78)
 	end)
 
 	it("should write 2 bytes", function()
 		stream.cursor = 0
-		stream:writebytes(2, 1234)
+		stream:writeUnsignedBytes(2, 1234)
 		local u16 = buffer.readu16(stream.buffer, 0)
 		expect(u16).toEqual(1234)
 	end)
 
 	it("should write 4 bytes", function()
 		stream.cursor = 0
-		stream:writebytes(4, 1_000_000)
+		stream:writeUnsignedBytes(4, 1_000_000)
 		local u32 = buffer.readu32(stream.buffer, 0)
 		expect(u32).toEqual(1_000_000)
 	end)
 
 	it("should not write signed integers", function()
 		stream.cursor = 0
-		stream:writebytes(1, -78)
+		stream:writeUnsignedBytes(1, -78)
 		local u8 = buffer.readu8(stream.buffer, 0)
 		expect(u8 == -78).toEqual(false)
 	end)
