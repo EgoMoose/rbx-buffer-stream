@@ -296,3 +296,111 @@ describe("writef64", function()
 		expect(f64).toEqual(1)
 	end)
 end)
+
+local HELLO = "Hello world!"
+local HELLO_LEN = #HELLO
+
+describe("readString", function()
+	local b = buffer.fromstring(HELLO)
+	local stream = BufferStream.static(b)
+
+	it("should read strings", function()
+		local str = stream:readString(HELLO_LEN)
+		expect(str).toEqual(HELLO)
+	end)
+end)
+
+describe("writeString", function()
+	local stream = BufferStream.static(buffer.create(HELLO_LEN))
+
+	it("should read strings", function()
+		stream:writeString(HELLO)
+		local str = buffer.readstring(stream.buffer, 0, HELLO_LEN)
+		expect(str).toEqual(HELLO)
+	end)
+end)
+
+describe("readBuffer", function()
+	local b = buffer.fromstring(HELLO)
+	local stream = BufferStream.static(b)
+
+	it("should read buffers", function()
+		local readB = stream:readBuffer(buffer.len(b))
+		expect(typeof(readB)).toEqual("buffer")
+		expect(buffer.tostring(readB)).toEqual(buffer.tostring(b))
+	end)
+end)
+
+describe("writeBuffer", function()
+	local bLen = buffer.len(buffer.fromstring(HELLO))
+	local stream = BufferStream.static(buffer.create(bLen))
+
+	it("should read strings", function()
+		stream:writeBuffer(buffer.fromstring(HELLO))
+		local readB = buffer.fromstring(buffer.readstring(stream.buffer, 0, bLen))
+		expect(typeof(readB)).toEqual("buffer")
+		expect(buffer.tostring(readB)).toEqual(HELLO)
+	end)
+end)
+
+describe("expand", function()
+	it("should expand dynamic streams", function()
+		local stream = BufferStream.dynamic(buffer.create(4))
+		stream:expand(8)
+		expect(stream.length).toEqual(4 + 8)
+	end)
+
+	it("should not expand static streams", function()
+		local stream = BufferStream.static(buffer.create(4))
+		local success, _err = pcall(function()
+			stream:expand(8)
+		end)
+		expect(success).toEqual(false)
+		expect(stream.length).toEqual(4)
+	end)
+end)
+
+describe("cursor modifiers", function()
+	local stream = BufferStream.dynamic(buffer.create(0))
+
+	stream:writeu8(10)
+	stream:writef64(math.pi)
+	stream:writef16(0)
+
+	it("should have its cursor at the end of the stream", function()
+		expect(stream:getCursor()).toEqual(stream:getLength())
+	end)
+
+	it("shouldn't be possible to have the cursor past the end of the stream", function()
+		stream:setCursor(stream:getLength() + 10)
+		expect(stream:getCursor()).toEqual(stream:getLength())
+	end)
+
+	it("should reset the cursor to the front of the stream", function()
+		stream:setCursor(0)
+		expect(stream:getCursor()).toEqual(0)
+	end)
+
+	it("should read the three values", function()
+		local u8 = stream:readu8()
+		local f64 = stream:readf64()
+		local f16 = stream:readf16()
+
+		expect(u8).toEqual(10)
+		expect(f64).toEqual(math.pi)
+		expect(f16).toEqual(0)
+	end)
+
+	it("should jump to a specific bytes", function()
+		stream:setCursor(1)
+		local f64 = stream:readf64()
+		expect(f64).toEqual(math.pi)
+	end)
+
+	it("should skip past certain bytes", function()
+		stream:setCursor(0)
+		stream:skip(9)
+		local f16 = stream:readf16()
+		expect(f16).toEqual(0)
+	end)
+end)
