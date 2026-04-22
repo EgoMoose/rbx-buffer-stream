@@ -51,18 +51,31 @@ function BufferStreamClass.setCursor(self: BufferStream, cursor: number)
 	self.cursor = math.clamp(cursor, 0, self.length)
 end
 
+function BufferStreamClass.skip(self: BufferStream, bytes: number)
+	self:setCursor(self.cursor + bytes)
+end
+
+local function expand(self: BufferStream, bytes: number)
+	self.length = self.length + bytes
+	local expanded = buffer.create(self.length)
+	buffer.copy(expanded, 0, self.buffer)
+	self.buffer = expanded
+end
+
 local function dynamicWrite<T...>(self: BufferStream, bytes: number, callback: (buffer, number, T...) -> (), ...: T...)
 	if self.dynamic then
 		local newCursor = self.cursor + bytes
 		if newCursor > self.length then
-			self.length = self.length + (newCursor - self.length)
-			local expanded = buffer.create(self.length)
-			buffer.copy(expanded, 0, self.buffer)
-			self.buffer = expanded
+			expand(self, newCursor - self.length)
 		end
 	end
 	callback(self.buffer, self.cursor, ...)
 	self.cursor = self.cursor + bytes
+end
+
+function BufferStreamClass.expand(self: BufferStream, bytes: number)
+	assert(self.dynamic, "Cannot expand a static buffer stream.")
+	expand(self, bytes)
 end
 
 function BufferStreamClass.readbytes(self: BufferStream, bytes: number)
@@ -259,6 +272,29 @@ end
 
 function BufferStreamClass.writef64(self: BufferStream, value: number)
 	return dynamicWrite(self, 8, buffer.writef64, value)
+end
+
+function BufferStreamClass.readString(self: BufferStream, bytes: number)
+	local result = buffer.readstring(self.buffer, self.cursor, bytes)
+	self.cursor = self.cursor + bytes
+	return result
+end
+
+function BufferStreamClass.writeString(self: BufferStream, value: string, count: number?)
+	local length = (count or #value)
+	dynamicWrite(self, length, buffer.writestring, value, length)
+end
+
+function BufferStreamClass.readBuffer(self: BufferStream, bytes: number)
+	local b = buffer.create(bytes)
+	buffer.copy(b, 0, self.buffer, self.cursor, bytes)
+	self.cursor = self.cursor + bytes
+	return b
+end
+
+function BufferStreamClass.writeBuffer(self: BufferStream, b: buffer, offset: number?, count: number?)
+	local length = count or buffer.len(b)
+	dynamicWrite(self, length, buffer.copy, b, offset or 0, length)
 end
 
 --
