@@ -43,6 +43,10 @@ function BufferStreamClass.copy(self: BufferStream)
 	return stream
 end
 
+function BufferStreamClass.getLength(self: BufferStream)
+	return self.length
+end
+
 function BufferStreamClass.getCursor(self: BufferStream)
 	return self.cursor
 end
