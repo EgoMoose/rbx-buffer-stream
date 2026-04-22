@@ -6,6 +6,7 @@
     "words": [
         "bnot",
         "frexp",
+        "fromstring",
         "lshift",
         "readbits",
         "readbytes",

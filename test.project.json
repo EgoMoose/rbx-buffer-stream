@@ -6,7 +6,7 @@
 			"$className": "ReplicatedStorage",
 			"DevPackages": {
 				"$path": "DevPackages",
-				"TestHelper": {
+				"Tests": {
 					"$path": "tests",
 					"TestEntry": {
 						"$className": "Script",
