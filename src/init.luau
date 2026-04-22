@@ -43,6 +43,14 @@ function BufferStreamClass.copy(self: BufferStream)
 	return stream
 end
 
+function BufferStreamClass.getCursor(self: BufferStream)
+	return self.cursor
+end
+
+function BufferStreamClass.setCursor(self: BufferStream, cursor: number)
+	self.cursor = math.clamp(cursor, 0, self.length)
+end
+
 local function dynamicWrite<T...>(self: BufferStream, bytes: number, callback: (buffer, number, T...) -> (), ...: T...)
 	if self.dynamic then
 		local newCursor = self.cursor + bytes
