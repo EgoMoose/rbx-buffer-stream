@@ -1,6 +1,16 @@
 {
 	"name": "buffer-stream",
+	"syncRules": [
+		{
+			"pattern": "LICENSE",
+			"use": "moduleScript"
+		}
+	],
 	"tree": {
-		"$path": "src"
+		"$path": "src",
+
+		"LICENSE": {
+			"$path": "LICENSE"
+		}
 	}
 }
