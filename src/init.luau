@@ -117,6 +117,22 @@ function BufferStreamClass.writeu16(self: BufferStream, value: number)
 	return dynamicWrite(self, 2, buffer.writeu16, value)
 end
 
+function BufferStreamClass.readu24(self: BufferStream)
+	local low = buffer.readu16(self.buffer, self.cursor)
+	local high = buffer.readu8(self.buffer, self.cursor + 2)
+	self.cursor = self.cursor + 3
+	return high * 65536 + low
+end
+
+local function write24(b: buffer, offset: number, value: number)
+	buffer.writeu16(b, offset, value)
+	buffer.writeu8(b, offset + 2, bit32.rshift(value, 16))
+end
+
+function BufferStreamClass.writeu24(self: BufferStream, value: number)
+	return dynamicWrite(self, 3, write24, value)
+end
+
 function BufferStreamClass.readu32(self: BufferStream)
 	local result = buffer.readu32(self.buffer, self.cursor)
 	self.cursor = self.cursor + 4
@@ -163,6 +179,17 @@ end
 
 function BufferStreamClass.writei16(self: BufferStream, value: number)
 	return dynamicWrite(self, 2, buffer.writei16, value)
+end
+
+function BufferStreamClass.readi24(self: BufferStream)
+	local low = buffer.readu16(self.buffer, self.cursor)
+	local high = buffer.readi8(self.buffer, self.cursor + 2)
+	self.cursor = self.cursor + 3
+	return high * 65536 + low
+end
+
+function BufferStreamClass.writei24(self: BufferStream, value: number)
+	return dynamicWrite(self, 3, write24, value)
 end
 
 function BufferStreamClass.readi32(self: BufferStream)
@@ -256,6 +283,65 @@ function BufferStreamClass.writef16(self: BufferStream, value: number)
 	end
 
 	return dynamicWrite(self, 2, buffer.writeu16, packed)
+end
+
+-- 1 sign bit, 7 exponent bits (bias 63), 16 fraction bits
+function BufferStreamClass.readf24(self: BufferStream)
+	local low = buffer.readu16(self.buffer, self.cursor)
+	local high = buffer.readu8(self.buffer, self.cursor + 2)
+	self.cursor = self.cursor + 3
+
+	local packed = high * 65536 + low
+	local sign = bit32.extract(packed, 23, 1) == 1 and -1 or 1
+	local exponent = bit32.extract(packed, 16, 7)
+	local fraction = bit32.extract(packed, 0, 16)
+
+	if exponent == 0 then
+		return sign * (fraction / 65536) * math.pow(2, -62)
+	elseif exponent == 127 then
+		return fraction == 0 and (sign * math.huge) or (0 / 0)
+	end
+
+	return sign * (1 + fraction / 65536) * math.pow(2, exponent - 63)
+end
+
+local function packf24(value: number)
+	if value == 0 then
+		return 0
+	elseif value ~= value then
+		return 0x7FFFFF
+	end
+
+	local sign = value < 0 and 1 or 0
+	local magnitude = math.abs(value)
+	local exponent, fraction
+
+	if magnitude == math.huge then
+		exponent, fraction = 127, 0
+	else
+		local mantissa
+		mantissa, exponent = math.frexp(magnitude)
+		exponent = exponent + 62
+
+		if exponent <= 0 then
+			-- subnormal, rounding may carry into the smallest normal exponent
+			exponent, fraction = 0, math.round(magnitude / math.pow(2, -62) * 65536)
+		else
+			fraction = math.round((mantissa * 2 - 1) * 65536)
+			if fraction == 65536 then
+				exponent, fraction = exponent + 1, 0
+			end
+			if exponent >= 127 then
+				exponent, fraction = 127, 0
+			end
+		end
+	end
+
+	return sign * 0x800000 + exponent * 65536 + fraction
+end
+
+function BufferStreamClass.writef24(self: BufferStream, value: number)
+	return dynamicWrite(self, 3, write24, packf24(value))
 end
 
 function BufferStreamClass.readf32(self: BufferStream)

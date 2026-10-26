@@ -123,6 +123,27 @@ describe("writeu16", function()
 	end)
 end)
 
+describe("readu24 / writeu24", function()
+	local b = buffer.create(3)
+	local stream = BufferStream.static(b)
+
+	it("should read & write u24s", function()
+		stream:writeu24(0xFFFFFF)
+		stream.cursor = 0
+		local u24 = stream:readu24()
+		expect(u24).toEqual(0xFFFFFF)
+		expect(stream.cursor).toEqual(3)
+	end)
+
+	it("should be little endian", function()
+		stream.cursor = 0
+		stream:writeu24(0x123456)
+		expect(buffer.readu8(b, 0)).toEqual(0x56)
+		expect(buffer.readu8(b, 1)).toEqual(0x34)
+		expect(buffer.readu8(b, 2)).toEqual(0x12)
+	end)
+end)
+
 describe("readu32", function()
 	local b = buffer.create(4)
 	buffer.writeu32(b, 0, 1_000_023)
@@ -198,6 +219,21 @@ describe("writei16", function()
 	end)
 end)
 
+describe("readi24 / writei24", function()
+	local b = buffer.create(3)
+	local stream = BufferStream.static(b)
+
+	it("should read & write i24s", function()
+		for _, value in { -8388608, -1_000_023, -1, 0, 1, 8388607 } do
+			stream.cursor = 0
+			stream:writei24(value)
+			stream.cursor = 0
+			local i24 = stream:readi24()
+			expect(i24).toEqual(value)
+		end
+	end)
+end)
+
 describe("readi32", function()
 	local b = buffer.create(4)
 	buffer.writei32(b, 0, -1_000_023)
@@ -252,6 +288,43 @@ describe("readf16 / writef16", function()
 		stream.cursor = 0
 		local f16 = stream:readf16()
 		expect(f16).toEqual(1)
+	end)
+end)
+
+describe("readf24 / writef24", function()
+	local b = buffer.create(3)
+	local stream = BufferStream.static(b)
+
+	local function roundtrip(value: number)
+		stream.cursor = 0
+		stream:writef24(value)
+		stream.cursor = 0
+		return stream:readf24()
+	end
+
+	it("should read & write f24s", function()
+		for _, value in { 0, 1, -1, 0.5, 1234.5, -65535 } do
+			expect(roundtrip(value)).toEqual(value)
+		end
+		expect(stream.cursor).toEqual(3)
+	end)
+
+	it("should approximate values", function()
+		expect(math.abs(roundtrip(math.pi) - math.pi) < 1e-4).toEqual(true)
+	end)
+
+	it("should handle subnormals", function()
+		local value = math.pow(2, -70)
+		expect(roundtrip(value)).toEqual(value)
+	end)
+
+	it("should handle infinity & nan", function()
+		expect(roundtrip(math.huge)).toEqual(math.huge)
+		expect(roundtrip(-math.huge)).toEqual(-math.huge)
+		expect(roundtrip(1e300)).toEqual(math.huge)
+
+		local nan = roundtrip(0 / 0)
+		expect(nan ~= nan).toEqual(true)
 	end)
 end)
 
