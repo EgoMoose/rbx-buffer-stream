@@ -222,6 +222,7 @@ end
 
 function BufferStreamClass.readf8(self: BufferStream)
 	local packed = buffer.readu8(self.buffer, self.cursor)
+	self.cursor = self.cursor + 1
 
 	local sign = bit32.extract(packed, 7, 1) == 1 and -1 or 1
 	local exponent = bit32.extract(packed, 3, 4)
@@ -254,6 +255,7 @@ end
 
 function BufferStreamClass.readf16(self: BufferStream)
 	local packed = buffer.readu16(self.buffer, self.cursor)
+	self.cursor = self.cursor + 2
 
 	local sign = bit32.extract(packed, 15, 1) == 1 and -1 or 1
 	local exponent = bit32.extract(packed, 10, 5)
