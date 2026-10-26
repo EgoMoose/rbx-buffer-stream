@@ -29,6 +29,10 @@ At the time of writing Roblox's buffer library lacks a couple of read and write 
 - `readf8` / `writef8`
 - `readf16` / `writef16`
 - `readf24` / `writef24` (1 sign bit, 7 exponent bits, 16 fraction bits)
+- `readBuffer` / `writeBuffer`
+- `readUnsignedBytes` / `writeUnsignedBytes`
+
+### Standalone read / writes
 
 Every fixed size numeric type (`u8` through `f64`, including the additions above) is also available as a standalone function that works on any buffer. They share the same signatures as the buffer library, so they can be used as a drop-in for it:
 
@@ -40,5 +44,8 @@ BufferStream.writeu24(b, 2, 0xABCDEF)
 print(BufferStream.readf16(b, 0)) -- 1.5
 print(BufferStream.readu24(b, 2)) -- 11259375
 ```
-- `readBuffer` / `writeBuffer`
-- `readUnsignedBytes` / `writeUnsignedBytes`
+
+Buffers can be read and written the same way:
+
+- `BufferStream.readBuffer(b, offset, count?)` returns a new buffer containing `count` bytes of `b` starting at `offset`. If `count` is omitted the rest of `b` is read.
+- `BufferStream.writeBuffer(b, offset, source, sourceOffset?, count?)` writes `source` into `b` at `offset`. If `count` is omitted the rest of `source` from `sourceOffset` is written. This is the same as `buffer.copy`.

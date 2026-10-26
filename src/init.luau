@@ -221,6 +221,15 @@ function BufferStreamStatic.writef24(b: buffer, offset: number, value: number)
 	BufferStreamStatic.writeu24(b, offset, packf24(value))
 end
 
+function BufferStreamStatic.readbuffer(b: buffer, offset: number, count: number?)
+	local length = count or (buffer.len(b) - offset)
+	local result = buffer.create(length)
+	buffer.copy(result, 0, b, offset, length)
+	return result
+end
+
+BufferStreamStatic.writebuffer = buffer.copy
+
 -- Methods
 
 function BufferStreamClass.copy(self: BufferStream)
@@ -448,16 +457,17 @@ function BufferStreamClass.writeString(self: BufferStream, value: string, count:
 	dynamicWrite(self, length, buffer.writestring, value, length)
 end
 
-function BufferStreamClass.readBuffer(self: BufferStream, bytes: number)
-	local b = buffer.create(bytes)
-	buffer.copy(b, 0, self.buffer, self.cursor, bytes)
-	self.cursor = self.cursor + bytes
-	return b
+function BufferStreamClass.readBuffer(self: BufferStream, bytes: number?)
+	local length = bytes or (self.length - self.cursor)
+	local result = BufferStreamStatic.readbuffer(self.buffer, self.cursor, length)
+	self.cursor = self.cursor + length
+	return result
 end
 
 function BufferStreamClass.writeBuffer(self: BufferStream, b: buffer, offset: number?, count: number?)
-	local length = count or buffer.len(b)
-	dynamicWrite(self, length, buffer.copy, b, offset or 0, length)
+	local sourceOffset = offset or 0
+	local length = count or (buffer.len(b) - sourceOffset)
+	dynamicWrite(self, length, BufferStreamStatic.writebuffer, b, sourceOffset, length)
 end
 
 --
