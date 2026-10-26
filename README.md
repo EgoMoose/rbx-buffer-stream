@@ -30,7 +30,7 @@ At the time of writing Roblox's buffer library lacks a couple of read and write 
 - `readf16` / `writef16`
 - `readf24` / `writef24` (1 sign bit, 7 exponent bits, 16 fraction bits)
 
-The fixed size numeric types above (everything except `readBuffer` / `writeBuffer` and `readUnsignedBytes` / `writeUnsignedBytes`) are also available as standalone functions that work on any buffer. They share the same signatures as the buffer library:
+Every fixed size numeric type (`u8` through `f64`, including the additions above) is also available as a standalone function that works on any buffer. They share the same signatures as the buffer library, so they can be used as a drop-in for it:
 
 ```luau
 local b = buffer.create(5)

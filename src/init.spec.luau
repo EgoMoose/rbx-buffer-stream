@@ -435,15 +435,23 @@ describe("expand", function()
 	end)
 end)
 
-describe("buffer library extensions", function()
-	local cases = {
+describe("buffer library functions", function()
+	local cases: { { any } } = {
+		{ "u8", 1, 122 },
+		{ "u16", 2, 10267 },
 		{ "u24", 3, 0xFFFFFF },
-		{ "i24", 3, -1_000_023 },
+		{ "u32", 4, 1_000_023 },
 		{ "u64", 8, 0xFFFFFFFF + 1 },
+		{ "i8", 1, -122 },
+		{ "i16", 2, -10267 },
+		{ "i24", 3, -1_000_023 },
+		{ "i32", 4, -1_000_023 },
 		{ "i64", 8, -0xFFFFFFFF },
 		{ "f8", 1, -1 },
 		{ "f16", 2, 1 },
 		{ "f24", 3, 1234.5 },
+		{ "f32", 4, 1.5 },
+		{ "f64", 8, math.pi },
 	}
 
 	for _, case in cases do

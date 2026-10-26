@@ -33,8 +33,26 @@ function BufferStreamStatic.dynamic(b: buffer)
 	return stream
 end
 
+-- Buffer library functions
+
+BufferStreamStatic.readu8 = buffer.readu8
+BufferStreamStatic.writeu8 = buffer.writeu8
+BufferStreamStatic.readu16 = buffer.readu16
+BufferStreamStatic.writeu16 = buffer.writeu16
+BufferStreamStatic.readu32 = buffer.readu32
+BufferStreamStatic.writeu32 = buffer.writeu32
+BufferStreamStatic.readi8 = buffer.readi8
+BufferStreamStatic.writei8 = buffer.writei8
+BufferStreamStatic.readi16 = buffer.readi16
+BufferStreamStatic.writei16 = buffer.writei16
+BufferStreamStatic.readi32 = buffer.readi32
+BufferStreamStatic.writei32 = buffer.writei32
+BufferStreamStatic.readf32 = buffer.readf32
+BufferStreamStatic.writef32 = buffer.writef32
+BufferStreamStatic.readf64 = buffer.readf64
+BufferStreamStatic.writef64 = buffer.writef64
+
 -- Buffer library extensions
--- These mirror the signatures of the buffer library and can be used on any buffer.
 
 function BufferStreamStatic.readu24(b: buffer, offset: number)
 	local low = buffer.readu16(b, offset)
@@ -254,12 +272,14 @@ end
 
 function BufferStreamClass.readUnsignedBytes(self: BufferStream, bytes: number)
 	local bits = bytes * 8
+	-- selene: allow(incorrect_standard_library_use)
 	local result = buffer.readbits(self.buffer, self.cursor * 8, bits)
 	self.cursor = self.cursor + bytes
 	return result
 end
 
 local function writebits(b: buffer, offset: number, bytes: number, value: number)
+	-- selene: allow(incorrect_standard_library_use)
 	return buffer.writebits(b, offset * 8, bytes * 8, value)
 end
 
