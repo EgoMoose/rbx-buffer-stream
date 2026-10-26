@@ -435,6 +435,39 @@ describe("expand", function()
 	end)
 end)
 
+describe("buffer library extensions", function()
+	local cases = {
+		{ "u24", 3, 0xFFFFFF },
+		{ "i24", 3, -1_000_023 },
+		{ "u64", 8, 0xFFFFFFFF + 1 },
+		{ "i64", 8, -0xFFFFFFFF },
+		{ "f8", 1, -1 },
+		{ "f16", 2, 1 },
+		{ "f24", 3, 1234.5 },
+	}
+
+	for _, case in cases do
+		local name, bytes, value = case[1], case[2], case[3]
+
+		it(`should read & write {name}s at an offset`, function()
+			local b = buffer.create(bytes + 2)
+			BufferStream[`write{name}`](b, 1, value)
+			expect(BufferStream[`read{name}`](b, 1)).toEqual(value)
+			expect(buffer.readu8(b, 0)).toEqual(0)
+			expect(buffer.readu8(b, bytes + 1)).toEqual(0)
+		end)
+
+		it(`should match the stream {name} methods`, function()
+			local b = buffer.create(bytes)
+			BufferStream[`write{name}`](b, 0, value)
+
+			local stream = BufferStream.static(buffer.create(bytes))
+			stream[`write{name}`](stream, value)
+			expect(buffer.tostring(stream.buffer)).toEqual(buffer.tostring(b))
+		end)
+	end
+end)
+
 describe("cursor modifiers", function()
 	local stream = BufferStream.dynamic(buffer.create(0))
 
