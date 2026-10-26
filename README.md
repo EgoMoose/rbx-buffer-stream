@@ -45,9 +45,11 @@ print(BufferStream.readf16(b, 0)) -- 1.5
 print(BufferStream.readu24(b, 2)) -- 11259375
 ```
 
-Buffers and unsigned bytes can be read and written the same way:
+Strings, buffers, and unsigned bytes can be read and written the same way:
 
-- `BufferStream.readbuffer(b, offset, count?)` returns a new buffer containing `count` bytes of `b` starting at `offset`. If `count` is omitted the rest of `b` is read.
+- `BufferStream.readstring(b, offset, count)` / `BufferStream.writestring(b, offset, value, count?)` are the same as `buffer.readstring` / `buffer.writestring`.
+
+- `BufferStream.readbuffer(b, offset, count)` returns a new buffer containing `count` bytes of `b` starting at `offset`.
 - `BufferStream.writebuffer(b, offset, source, sourceOffset?, count?)` writes `source` into `b` at `offset`. If `count` is omitted the rest of `source` from `sourceOffset` is written. This is the same as `buffer.copy`.
 - `BufferStream.readubytes(b, offset, bytes)` reads an unsigned integer that is `bytes` bytes long.
 - `BufferStream.writeubytes(b, offset, bytes, value)` writes an unsigned integer that is `bytes` bytes long.

@@ -51,6 +51,8 @@ BufferStreamStatic.readf32 = buffer.readf32
 BufferStreamStatic.writef32 = buffer.writef32
 BufferStreamStatic.readf64 = buffer.readf64
 BufferStreamStatic.writef64 = buffer.writef64
+BufferStreamStatic.readstring = buffer.readstring
+BufferStreamStatic.writestring = buffer.writestring
 
 -- Buffer library extensions
 
@@ -221,10 +223,9 @@ function BufferStreamStatic.writef24(b: buffer, offset: number, value: number)
 	BufferStreamStatic.writeu24(b, offset, packf24(value))
 end
 
-function BufferStreamStatic.readbuffer(b: buffer, offset: number, count: number?)
-	local length = count or (buffer.len(b) - offset)
-	local result = buffer.create(length)
-	buffer.copy(result, 0, b, offset, length)
+function BufferStreamStatic.readbuffer(b: buffer, offset: number, count: number)
+	local result = buffer.create(count)
+	buffer.copy(result, 0, b, offset, count)
 	return result
 end
 
@@ -450,20 +451,19 @@ function BufferStreamClass.writef64(self: BufferStream, value: number)
 end
 
 function BufferStreamClass.readString(self: BufferStream, bytes: number)
-	local result = buffer.readstring(self.buffer, self.cursor, bytes)
+	local result = BufferStreamStatic.readstring(self.buffer, self.cursor, bytes)
 	self.cursor = self.cursor + bytes
 	return result
 end
 
 function BufferStreamClass.writeString(self: BufferStream, value: string, count: number?)
 	local length = (count or #value)
-	dynamicWrite(self, length, buffer.writestring, value, length)
+	dynamicWrite(self, length, BufferStreamStatic.writestring, value, length)
 end
 
-function BufferStreamClass.readBuffer(self: BufferStream, bytes: number?)
-	local length = bytes or (self.length - self.cursor)
-	local result = BufferStreamStatic.readbuffer(self.buffer, self.cursor, length)
-	self.cursor = self.cursor + length
+function BufferStreamClass.readBuffer(self: BufferStream, bytes: number)
+	local result = BufferStreamStatic.readbuffer(self.buffer, self.cursor, bytes)
+	self.cursor = self.cursor + bytes
 	return result
 end
 
