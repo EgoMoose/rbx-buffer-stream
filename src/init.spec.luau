@@ -504,6 +504,17 @@ describe("buffer library functions", function()
 		BufferStream.writebuffer(b, 6, buffer.fromstring("--world!"), 2)
 		expect(buffer.tostring(b)).toEqual(HELLO)
 	end)
+
+	it("should read & write unsigned bytes at an offset", function()
+		for _, bytes in { 1, 2, 3, 4 } do
+			local value = 2 ^ (bytes * 8) - 2
+			local b = buffer.create(bytes + 2)
+			BufferStream.writeubytes(b, 1, bytes, value)
+			expect(BufferStream.readubytes(b, 1, bytes)).toEqual(value)
+			expect(buffer.readu8(b, 0)).toEqual(0)
+			expect(buffer.readu8(b, bytes + 1)).toEqual(0)
+		end
+	end)
 end)
 
 describe("readBuffer / writeBuffer defaults", function()

@@ -230,6 +230,16 @@ end
 
 BufferStreamStatic.writebuffer = buffer.copy
 
+function BufferStreamStatic.readubytes(b: buffer, offset: number, bytes: number)
+	-- selene: allow(incorrect_standard_library_use)
+	return buffer.readbits(b, offset * 8, bytes * 8)
+end
+
+function BufferStreamStatic.writeubytes(b: buffer, offset: number, bytes: number, value: number)
+	-- selene: allow(incorrect_standard_library_use)
+	buffer.writebits(b, offset * 8, bytes * 8, value)
+end
+
 -- Methods
 
 function BufferStreamClass.copy(self: BufferStream)
@@ -280,20 +290,13 @@ function BufferStreamClass.expand(self: BufferStream, bytes: number)
 end
 
 function BufferStreamClass.readUnsignedBytes(self: BufferStream, bytes: number)
-	local bits = bytes * 8
-	-- selene: allow(incorrect_standard_library_use)
-	local result = buffer.readbits(self.buffer, self.cursor * 8, bits)
+	local result = BufferStreamStatic.readubytes(self.buffer, self.cursor, bytes)
 	self.cursor = self.cursor + bytes
 	return result
 end
 
-local function writebits(b: buffer, offset: number, bytes: number, value: number)
-	-- selene: allow(incorrect_standard_library_use)
-	return buffer.writebits(b, offset * 8, bytes * 8, value)
-end
-
 function BufferStreamClass.writeUnsignedBytes(self: BufferStream, bytes: number, value: number)
-	return dynamicWrite(self, bytes, writebits, bytes, value)
+	return dynamicWrite(self, bytes, BufferStreamStatic.writeubytes, bytes, value)
 end
 
 function BufferStreamClass.readu8(self: BufferStream)

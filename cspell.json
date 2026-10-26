@@ -17,6 +17,7 @@
         "readi",
         "readstring",
         "readu",
+        "readubytes",
         "rshift",
         "setmetatable",
         "writebits",
@@ -25,7 +26,8 @@
         "writef",
         "writei",
         "writestring",
-        "writeu"
+        "writeu",
+        "writeubytes"
     ],
     "ignoreWords": [],
     "import": []
