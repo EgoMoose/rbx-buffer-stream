@@ -435,6 +435,106 @@ describe("expand", function()
 	end)
 end)
 
+describe("buffer library functions", function()
+	local cases: { { any } } = {
+		{ "u8", 1, 122 },
+		{ "u16", 2, 10267 },
+		{ "u24", 3, 0xFFFFFF },
+		{ "u32", 4, 1_000_023 },
+		{ "u64", 8, 0xFFFFFFFF + 1 },
+		{ "i8", 1, -122 },
+		{ "i16", 2, -10267 },
+		{ "i24", 3, -1_000_023 },
+		{ "i32", 4, -1_000_023 },
+		{ "i64", 8, -0xFFFFFFFF },
+		{ "f8", 1, -1 },
+		{ "f16", 2, 1 },
+		{ "f24", 3, 1234.5 },
+		{ "f32", 4, 1.5 },
+		{ "f64", 8, math.pi },
+	}
+
+	for _, case in cases do
+		local name, bytes, value = case[1], case[2], case[3]
+
+		it(`should read & write {name}s at an offset`, function()
+			local b = buffer.create(bytes + 2)
+			BufferStream[`write{name}`](b, 1, value)
+			expect(BufferStream[`read{name}`](b, 1)).toEqual(value)
+			expect(buffer.readu8(b, 0)).toEqual(0)
+			expect(buffer.readu8(b, bytes + 1)).toEqual(0)
+		end)
+
+		it(`should match the stream {name} methods`, function()
+			local b = buffer.create(bytes)
+			BufferStream[`write{name}`](b, 0, value)
+
+			local stream = BufferStream.static(buffer.create(bytes))
+			stream[`write{name}`](stream, value)
+			expect(buffer.tostring(stream.buffer)).toEqual(buffer.tostring(b))
+		end)
+	end
+
+	it("should read buffers at an offset", function()
+		local b = buffer.fromstring(HELLO)
+		local readB = BufferStream.readbuffer(b, 6, 5)
+		expect(buffer.tostring(readB)).toEqual("world")
+		expect(readB == b).toEqual(false)
+	end)
+
+	it("should write buffers at an offset", function()
+		local b = buffer.fromstring("Hello there!")
+		BufferStream.writebuffer(b, 6, buffer.fromstring("--world--"), 2, 5)
+		expect(buffer.tostring(b)).toEqual(HELLO)
+	end)
+
+	it("should write the whole buffer by default", function()
+		local b = buffer.create(HELLO_LEN + 2)
+		BufferStream.writebuffer(b, 1, buffer.fromstring(HELLO))
+		expect(buffer.readstring(b, 1, HELLO_LEN)).toEqual(HELLO)
+	end)
+
+	it("should write the rest of the source by default", function()
+		local b = buffer.fromstring("Hello there!")
+		BufferStream.writebuffer(b, 6, buffer.fromstring("--world!"), 2)
+		expect(buffer.tostring(b)).toEqual(HELLO)
+	end)
+
+	it("should read & write strings at an offset", function()
+		local b = buffer.create(HELLO_LEN + 2)
+		BufferStream.writestring(b, 1, HELLO)
+		expect(BufferStream.readstring(b, 1, HELLO_LEN)).toEqual(HELLO)
+		expect(buffer.readu8(b, 0)).toEqual(0)
+		expect(buffer.readu8(b, HELLO_LEN + 1)).toEqual(0)
+	end)
+
+	it("should write part of a string", function()
+		local b = buffer.fromstring("Hello there!")
+		BufferStream.writestring(b, 6, "world!!!", 5)
+		expect(buffer.tostring(b)).toEqual(HELLO)
+	end)
+
+	it("should read & write unsigned bytes at an offset", function()
+		for _, bytes in { 1, 2, 3, 4 } do
+			local value = 2 ^ (bytes * 8) - 2
+			local b = buffer.create(bytes + 2)
+			BufferStream.writeubytes(b, 1, bytes, value)
+			expect(BufferStream.readubytes(b, 1, bytes)).toEqual(value)
+			expect(buffer.readu8(b, 0)).toEqual(0)
+			expect(buffer.readu8(b, bytes + 1)).toEqual(0)
+		end
+	end)
+end)
+
+describe("writeBuffer defaults", function()
+	it("should write the rest of the source from an offset by default", function()
+		local stream = BufferStream.dynamic(buffer.create(0))
+		stream:writeBuffer(buffer.fromstring("--Hello world!"), 2)
+		expect(buffer.tostring(stream.buffer)).toEqual(HELLO)
+		expect(stream:getCursor()).toEqual(HELLO_LEN)
+	end)
+end)
+
 describe("cursor modifiers", function()
 	local stream = BufferStream.dynamic(buffer.create(0))
 
