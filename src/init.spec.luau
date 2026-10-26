@@ -276,6 +276,7 @@ describe("readf8 / writef8", function()
 		stream.cursor = 0
 		local f8 = stream:readf8()
 		expect(f8).toEqual(-1)
+		expect(stream.cursor).toEqual(1)
 	end)
 end)
 
@@ -288,6 +289,7 @@ describe("readf16 / writef16", function()
 		stream.cursor = 0
 		local f16 = stream:readf16()
 		expect(f16).toEqual(1)
+		expect(stream.cursor).toEqual(2)
 	end)
 end)
 
@@ -468,6 +470,21 @@ describe("cursor modifiers", function()
 		stream:setCursor(1)
 		local f64 = stream:readf64()
 		expect(f64).toEqual(math.pi)
+	end)
+
+	it("should advance the cursor past small floats", function()
+		local small = BufferStream.dynamic(buffer.create(0))
+		small:writef8(-1)
+		small:writef16(1)
+		small:writef24(2)
+		small:writeu8(10)
+
+		small:setCursor(0)
+		expect(small:readf8()).toEqual(-1)
+		expect(small:readf16()).toEqual(1)
+		expect(small:readf24()).toEqual(2)
+		expect(small:readu8()).toEqual(10)
+		expect(small:getCursor()).toEqual(small:getLength())
 	end)
 
 	it("should skip past certain bytes", function()
