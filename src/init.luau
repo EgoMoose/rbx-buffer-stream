@@ -67,6 +67,19 @@ function BufferStreamStatic.writeu24(b: buffer, offset: number, value: number)
 	buffer.writeu8(b, offset + 2, bit32.rshift(value, 16))
 end
 
+function BufferStreamStatic.readu48(b: buffer, offset: number)
+	local low = buffer.readu32(b, offset)
+	local high = buffer.readu16(b, offset + 4)
+	return high * 4294967296 + low
+end
+
+function BufferStreamStatic.writeu48(b: buffer, offset: number, value: number)
+	local low = value % 4294967296
+	local high = math.floor(value / 4294967296)
+	buffer.writeu32(b, offset, low)
+	buffer.writeu16(b, offset + 4, high)
+end
+
 function BufferStreamStatic.readu64(b: buffer, offset: number)
 	local low = buffer.readu32(b, offset)
 	local high = buffer.readu32(b, offset + 4)
@@ -88,6 +101,19 @@ end
 
 -- two's complement means the low 24 bits are the same as the unsigned write
 BufferStreamStatic.writei24 = BufferStreamStatic.writeu24
+
+function BufferStreamStatic.readi48(b: buffer, offset: number)
+	local low = buffer.readu32(b, offset)
+	local high = buffer.readi16(b, offset + 4)
+	return high * 4294967296 + low
+end
+
+function BufferStreamStatic.writei48(b: buffer, offset: number, value: number)
+	local low = value % 4294967296
+	local high = math.floor(value / 4294967296)
+	buffer.writeu32(b, offset, low)
+	buffer.writei16(b, offset + 4, high)
+end
 
 function BufferStreamStatic.readi64(b: buffer, offset: number)
 	local low = buffer.readu32(b, offset)
@@ -223,6 +249,64 @@ function BufferStreamStatic.writef24(b: buffer, offset: number, value: number)
 	BufferStreamStatic.writeu24(b, offset, packf24(value))
 end
 
+-- 1 sign bit, 11 exponent bits (bias 1023), 36 fraction bits
+-- the exponent matches f64 so only precision is lost, never range
+function BufferStreamStatic.readf48(b: buffer, offset: number)
+	local low = buffer.readu32(b, offset)
+	local high = buffer.readu16(b, offset + 4)
+
+	local sign = bit32.extract(high, 15, 1) == 1 and -1 or 1
+	local exponent = bit32.extract(high, 4, 11)
+	local fraction = bit32.extract(high, 0, 4) * 4294967296 + low
+
+	if exponent == 0 then
+		return sign * (fraction / 68719476736) * math.pow(2, -1022)
+	elseif exponent == 2047 then
+		return fraction == 0 and (sign * math.huge) or (0 / 0)
+	end
+
+	return sign * (1 + fraction / 68719476736) * math.pow(2, exponent - 1023)
+end
+
+local function packf48(value: number)
+	if value == 0 then
+		return 0
+	elseif value ~= value then
+		return 0x7FFFFFFFFFFF
+	end
+
+	local sign = value < 0 and 1 or 0
+	local magnitude = math.abs(value)
+	local exponent, fraction
+
+	if magnitude == math.huge then
+		exponent, fraction = 2047, 0
+	else
+		local mantissa
+		mantissa, exponent = math.frexp(magnitude)
+		exponent = exponent + 1022
+
+		if exponent <= 0 then
+			-- subnormal, rounding may carry into the smallest normal exponent
+			exponent, fraction = 0, math.round(magnitude / math.pow(2, -1022) * 68719476736)
+		else
+			fraction = math.round((mantissa * 2 - 1) * 68719476736)
+			if fraction == 68719476736 then
+				exponent, fraction = exponent + 1, 0
+			end
+			if exponent >= 2047 then
+				exponent, fraction = 2047, 0
+			end
+		end
+	end
+
+	return sign * 0x800000000000 + exponent * 68719476736 + fraction
+end
+
+function BufferStreamStatic.writef48(b: buffer, offset: number, value: number)
+	BufferStreamStatic.writeu48(b, offset, packf48(value))
+end
+
 function BufferStreamStatic.readbuffer(b: buffer, offset: number, count: number)
 	local result = buffer.create(count)
 	buffer.copy(result, 0, b, offset, count)
@@ -340,6 +424,16 @@ function BufferStreamClass.writeu32(self: BufferStream, value: number)
 	return dynamicWrite(self, 4, buffer.writeu32, value)
 end
 
+function BufferStreamClass.readu48(self: BufferStream)
+	local result = BufferStreamStatic.readu48(self.buffer, self.cursor)
+	self.cursor = self.cursor + 6
+	return result
+end
+
+function BufferStreamClass.writeu48(self: BufferStream, value: number)
+	return dynamicWrite(self, 6, BufferStreamStatic.writeu48, value)
+end
+
 function BufferStreamClass.readu64(self: BufferStream)
 	local result = BufferStreamStatic.readu64(self.buffer, self.cursor)
 	self.cursor = self.cursor + 8
@@ -390,6 +484,16 @@ function BufferStreamClass.writei32(self: BufferStream, value: number)
 	return dynamicWrite(self, 4, buffer.writei32, value)
 end
 
+function BufferStreamClass.readi48(self: BufferStream)
+	local result = BufferStreamStatic.readi48(self.buffer, self.cursor)
+	self.cursor = self.cursor + 6
+	return result
+end
+
+function BufferStreamClass.writei48(self: BufferStream, value: number)
+	return dynamicWrite(self, 6, BufferStreamStatic.writei48, value)
+end
+
 function BufferStreamClass.readi64(self: BufferStream)
 	local result = BufferStreamStatic.readi64(self.buffer, self.cursor)
 	self.cursor = self.cursor + 8
@@ -438,6 +542,16 @@ end
 
 function BufferStreamClass.writef32(self: BufferStream, value: number)
 	return dynamicWrite(self, 4, buffer.writef32, value)
+end
+
+function BufferStreamClass.readf48(self: BufferStream)
+	local result = BufferStreamStatic.readf48(self.buffer, self.cursor)
+	self.cursor = self.cursor + 6
+	return result
+end
+
+function BufferStreamClass.writef48(self: BufferStream, value: number)
+	return dynamicWrite(self, 6, BufferStreamStatic.writef48, value)
 end
 
 function BufferStreamClass.readf64(self: BufferStream)
