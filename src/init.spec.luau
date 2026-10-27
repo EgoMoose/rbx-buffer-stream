@@ -165,6 +165,33 @@ describe("writeu32", function()
 	end)
 end)
 
+describe("readu48 / writeu48", function()
+	local b = buffer.create(6)
+	local stream = BufferStream.static(b)
+
+	it("should read & write u48s", function()
+		for _, value in { 0, 1, 0xFFFFFFFF + 1, 2 ^ 48 - 1 } do
+			stream.cursor = 0
+			stream:writeu48(value)
+			stream.cursor = 0
+			local u48 = stream:readu48()
+			expect(u48).toEqual(value)
+			expect(stream.cursor).toEqual(6)
+		end
+	end)
+
+	it("should be little endian", function()
+		stream.cursor = 0
+		stream:writeu48(0x123456789ABC)
+		expect(buffer.readu8(b, 0)).toEqual(0xBC)
+		expect(buffer.readu8(b, 1)).toEqual(0x9A)
+		expect(buffer.readu8(b, 2)).toEqual(0x78)
+		expect(buffer.readu8(b, 3)).toEqual(0x56)
+		expect(buffer.readu8(b, 4)).toEqual(0x34)
+		expect(buffer.readu8(b, 5)).toEqual(0x12)
+	end)
+end)
+
 describe("readu64 / writeu64", function()
 	local b = buffer.create(8)
 	local stream = BufferStream.static(b)
@@ -255,6 +282,22 @@ describe("writei32", function()
 	end)
 end)
 
+describe("readi48 / writei48", function()
+	local b = buffer.create(6)
+	local stream = BufferStream.static(b)
+
+	it("should read & write i48s", function()
+		for _, value in { -(2 ^ 47), -0xFFFFFFFF, -1, 0, 1, 0xFFFFFFFF, 2 ^ 47 - 1 } do
+			stream.cursor = 0
+			stream:writei48(value)
+			stream.cursor = 0
+			local i48 = stream:readi48()
+			expect(i48).toEqual(value)
+			expect(stream.cursor).toEqual(6)
+		end
+	end)
+end)
+
 describe("readi64 / writei64", function()
 	local b = buffer.create(8)
 	local stream = BufferStream.static(b)
@@ -324,6 +367,43 @@ describe("readf24 / writef24", function()
 		expect(roundtrip(math.huge)).toEqual(math.huge)
 		expect(roundtrip(-math.huge)).toEqual(-math.huge)
 		expect(roundtrip(1e300)).toEqual(math.huge)
+
+		local nan = roundtrip(0 / 0)
+		expect(nan ~= nan).toEqual(true)
+	end)
+end)
+
+describe("readf48 / writef48", function()
+	local b = buffer.create(6)
+	local stream = BufferStream.static(b)
+
+	local function roundtrip(value: number)
+		stream.cursor = 0
+		stream:writef48(value)
+		stream.cursor = 0
+		return stream:readf48()
+	end
+
+	it("should read & write f48s", function()
+		for _, value in { 0, 1, -1, 0.5, 1234.5, -65535, 2 ^ 1000, -(2 ^ -1000) } do
+			expect(roundtrip(value)).toEqual(value)
+		end
+		expect(stream.cursor).toEqual(6)
+	end)
+
+	it("should approximate values", function()
+		expect(math.abs(roundtrip(math.pi) - math.pi) < 1e-10).toEqual(true)
+	end)
+
+	it("should handle subnormals", function()
+		local value = math.pow(2, -1040)
+		expect(roundtrip(value)).toEqual(value)
+	end)
+
+	it("should handle infinity & nan", function()
+		expect(roundtrip(math.huge)).toEqual(math.huge)
+		expect(roundtrip(-math.huge)).toEqual(-math.huge)
+		expect(roundtrip(1.7976931348623157e308)).toEqual(math.huge)
 
 		local nan = roundtrip(0 / 0)
 		expect(nan ~= nan).toEqual(true)
@@ -441,16 +521,19 @@ describe("buffer library functions", function()
 		{ "u16", 2, 10267 },
 		{ "u24", 3, 0xFFFFFF },
 		{ "u32", 4, 1_000_023 },
+		{ "u48", 6, 0x123456789ABC },
 		{ "u64", 8, 0xFFFFFFFF + 1 },
 		{ "i8", 1, -122 },
 		{ "i16", 2, -10267 },
 		{ "i24", 3, -1_000_023 },
 		{ "i32", 4, -1_000_023 },
+		{ "i48", 6, -0x123456789ABC },
 		{ "i64", 8, -0xFFFFFFFF },
 		{ "f8", 1, -1 },
 		{ "f16", 2, 1 },
 		{ "f24", 3, 1234.5 },
 		{ "f32", 4, 1.5 },
+		{ "f48", 6, 1234.5 },
 		{ "f64", 8, math.pi },
 	}
 
@@ -577,12 +660,14 @@ describe("cursor modifiers", function()
 		small:writef8(-1)
 		small:writef16(1)
 		small:writef24(2)
+		small:writef48(3)
 		small:writeu8(10)
 
 		small:setCursor(0)
 		expect(small:readf8()).toEqual(-1)
 		expect(small:readf16()).toEqual(1)
 		expect(small:readf24()).toEqual(2)
+		expect(small:readf48()).toEqual(3)
 		expect(small:readu8()).toEqual(10)
 		expect(small:getCursor()).toEqual(small:getLength())
 	end)

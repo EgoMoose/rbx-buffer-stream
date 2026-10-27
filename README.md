@@ -23,12 +23,15 @@ BufferStream offers support for both static and dynamic size buffers. If you wan
 At the time of writing Roblox's buffer library lacks a couple of read and write functions for some helpful numeric types. BufferStream adds read and write support for the following:
 
 - `readu24` / `writeu24`
+- `readu48` / `writeu48`
 - `readu64` / `writeu64`
 - `readi24` / `writei24`
+- `readi48` / `writei48`
 - `readi64` / `writei64`
 - `readf8` / `writef8`
 - `readf16` / `writef16`
 - `readf24` / `writef24` (1 sign bit, 7 exponent bits, 16 fraction bits)
+- `readf48` / `writef48` (1 sign bit, 11 exponent bits, 36 fraction bits)
 - `readBuffer` / `writeBuffer`
 - `readUnsignedBytes` / `writeUnsignedBytes`
 
